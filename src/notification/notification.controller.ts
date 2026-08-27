@@ -6,11 +6,14 @@ import {
   Post,
   Get,
   Param,
+  Query,
 } from '@nestjs/common';
 import {
   CreateNotificationRequestDto,
   CreateNotificationResponseDto,
-  NotificationInfoResponseDto,
+  NotificationByIdResponseDto,
+  GetNotificationsQueryDto,
+  NotificationListResponseDto,
 } from './notification-dto/notification-dto';
 import { NotificationService } from './notification.service';
 
@@ -26,10 +29,17 @@ export class NotificationController {
     return this.notificationservice.createNotification(req);
   }
 
+  @Get()
+  getNotifications(
+    @Query() query: GetNotificationsQueryDto,
+  ): Promise<NotificationListResponseDto> {
+    return this.notificationservice.getNotifications(query);
+  }
+
   @Get('/:id')
   getNotification(
     @Param('id') id: string,
-  ): Promise<NotificationInfoResponseDto> {
+  ): Promise<NotificationByIdResponseDto> {
     return this.notificationservice.getNotification(id);
   }
 }

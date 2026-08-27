@@ -1,5 +1,17 @@
-import { IsEnum, IsObject, IsString } from 'class-validator';
-import { BaseResponseDto } from '../../common/dto/base-response.dto';
+import {
+  IsEnum,
+  IsInt,
+  IsObject,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  BaseResponseDto,
+  PaginationDto,
+} from '../../common/dto/base-response.dto';
 import {
   NotificationChannel,
   NotificationStatus,
@@ -32,6 +44,50 @@ export class NotificationDetails {
   status: NotificationStatus;
   createdat: Date;
 }
-export class NotificationInfoResponseDto extends BaseResponseDto {
+export class NotificationByIdResponseDto extends BaseResponseDto {
   notificationdata: NotificationDetails;
+}
+
+export class GetNotificationsQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+
+  @IsOptional()
+  @IsEnum(NotificationStatus)
+  status?: NotificationStatus;
+
+  @IsOptional()
+  @IsEnum(NotificationChannel)
+  channel?: NotificationChannel;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
+}
+
+export class NotificationSummaryDto {
+  id: string;
+  userId: string;
+  channel: NotificationChannel;
+  template: string;
+  status: NotificationStatus;
+  createdAt: Date;
+}
+
+class NotificationListData {
+  notifications: NotificationSummaryDto[];
+  pagination: PaginationDto;
+}
+export class NotificationListResponseDto extends BaseResponseDto {
+  data: NotificationListData;
 }

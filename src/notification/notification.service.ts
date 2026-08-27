@@ -2,7 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   CreateNotificationResponseDto,
   CreateNotificationRequestDto,
-  NotificationInfoResponseDto,
+  NotificationByIdResponseDto,
+  GetNotificationsQueryDto,
+  NotificationListResponseDto,
 } from './notification-dto/notification-dto';
 import {
   NotificationStatus,
@@ -41,8 +43,8 @@ export class NotificationService {
     }
   }
 
-  async getNotification(id: string): Promise<NotificationInfoResponseDto> {
-    const response = new NotificationInfoResponseDto();
+  async getNotification(id: string): Promise<NotificationByIdResponseDto> {
+    const response = new NotificationByIdResponseDto();
     try {
       const notification = await this.notificationRepository.findUnique({
         where: { id },
@@ -67,6 +69,57 @@ export class NotificationService {
     } catch (error: unknown) {
       response.error = error instanceof Error ? error.message : String(error);
       response.message = 'Failed to fetch notification';
+      response.status = 'error';
+      throw new HttpException(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getNotifications(
+    query: GetNotificationsQueryDto,
+  ): Promise<NotificationListResponseDto> {
+    const response = new NotificationListResponseDto();
+    try {
+      const { page, limit, status, channel, userId } = query;
+
+      const where: Prisma.notificationsWhereInput = {
+        user_id: userId,
+        channel,
+        status,
+      };
+
+      const [notifications, total] = await Promise.all([
+        this.notificationRepository.findMany({
+          where,
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: { created_at: 'desc' },
+        }),
+        this.notificationRepository.count({ where }),
+      ]);
+
+      response.data = {
+        notifications: notifications.map((notification) => ({
+          id: notification.id,
+          userId: notification.user_id,
+          channel: notification.channel as NotificationChannel,
+          template: notification.template,
+          status: notification.status as NotificationStatus,
+          createdAt: notification.created_at,
+        })),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+
+      response.status = 'success';
+      response.message = 'Notifications fetched successfully';
+      return response;
+    } catch (error: unknown) {
+      response.error = error instanceof Error ? error.message : String(error);
+      response.message = 'Failed to fetch notifications';
       response.status = 'error';
       throw new HttpException(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }

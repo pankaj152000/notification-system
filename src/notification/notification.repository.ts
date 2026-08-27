@@ -13,4 +13,12 @@ export class NotificationRepository {
   findUnique(args: Prisma.notificationsFindUniqueArgs) {
     return this.prisma.notifications.findUnique(args);
   }
+
+  findMany(args: Prisma.notificationsFindManyArgs) {
+    return this.prisma.notifications.findMany(args);
+  }
+
+  count(args: Prisma.notificationsCountArgs) {
+    return this.prisma.notifications.count(args);
+  }
 }
