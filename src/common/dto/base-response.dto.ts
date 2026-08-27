@@ -1,7 +1,5 @@
-import { HttpStatus } from '@nestjs/common';
-
 export class BaseResponseDto {
-  status: HttpStatus;
+  status: string;
   message: string;
   error: string;
 }

@@ -1,12 +1,12 @@
 export enum NotificationChannel {
-  EMAIL = 'email',
-  SMS = 'sms',
-  PUSH = 'push',
+  email = 'email',
+  sms = 'sms',
+  push = 'push',
 }
 
 export enum NotificationStatus {
-  PENDING = 'pending',
-  SENT = 'sent',
-  FAILED = 'failed',
-  PROCESSING = 'processing',
+  pending = 'pending',
+  sent = 'sent',
+  failed = 'failed',
+  processing = 'processing',
 }

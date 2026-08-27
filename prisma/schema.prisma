@@ -14,7 +14,7 @@ model notifications {
   channel    notification_channel
   template   String               @db.VarChar(255)
   data       Json
-  status     notification_status  @default(PENDING)
+  status     notification_status  @default(pending)
   created_at DateTime             @default(now()) @db.Timestamp(6)
   updated_at DateTime             @default(now()) @db.Timestamp(6)
 }
@@ -49,15 +49,16 @@ model users {
 }
 
 enum notification_channel {
-  EMAIL
-  SMS
+  email
+  sms
+  push
 }
 
 enum notification_status {
-  PENDING
-  PROCESSING
-  SENT
-  FAILED
+  pending
+  sent
+  failed
+  processing
 }
 
 enum user_status {
