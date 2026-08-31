@@ -21,4 +21,8 @@ export class NotificationRepository {
   count(args: Prisma.notificationsCountArgs) {
     return this.prisma.notifications.count(args);
   }
+
+  update(args: Prisma.notificationsUpdateArgs) {
+    return this.prisma.notifications.update(args);
+  }
 }

@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateNotificationResponseDto,
   CreateNotificationRequestDto,
@@ -12,11 +17,16 @@ import {
 } from './enum/notification.enum';
 import { NotificationRepository } from './notification.repository';
 import { Prisma } from '../generated/prisma/client';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class NotificationService {
   constructor(
     private readonly notificationRepository: NotificationRepository,
+
+    @InjectQueue('notifications')
+    private readonly notificationQueue: Queue,
   ) {}
 
   async createNotification(
@@ -24,11 +34,15 @@ export class NotificationService {
   ): Promise<CreateNotificationResponseDto> {
     const response = new CreateNotificationResponseDto();
     try {
-      await this.notificationRepository.create({
+      const notification = await this.notificationRepository.create({
         user_id: req.userId,
         channel: NotificationChannel[req.channel],
         template: req.template,
         data: req.data as Prisma.InputJsonValue,
+      });
+
+      await this.notificationQueue.add('send-notification', {
+        notificationId: notification.id,
       });
 
       response.status = 'success';
@@ -123,5 +137,29 @@ export class NotificationService {
       response.status = 'error';
       throw new HttpException(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async processNotification(notificationId: string): Promise<void> {
+    const notification = await this.notificationRepository.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found');
+    }
+
+    await this.notificationRepository.update({
+      where: { id: notificationId },
+      data: { status: NotificationStatus.processing },
+    });
+
+    console.log('Notification processing started:', notificationId);
+
+    await this.notificationRepository.update({
+      where: { id: notificationId },
+      data: { status: NotificationStatus.sent },
+    });
+
+    console.log('Notification processing completed:', notificationId);
   }
 }
